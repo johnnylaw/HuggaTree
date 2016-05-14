@@ -116,9 +116,16 @@ void writeStrips() {
 }
 
 void writeSignStrip() {
-  signBufferPosition += 1;
-  for (int i = 0; i < SIGN_STRIP_LENGTH; i++) signWriteBuffer[i] = signBuffer[i].interpolate(signBuffer[i + 1], fmod(signBufferPosition, 1.0));
-  signBufferPosition = fmod(signBufferPosition, SIGN_STRIP_LENGTH);  
+  signBufferPosition -= (SIGN_STRIP_LENGTH * 2) * STRIP_WRITE_INTERVAL / 1000.0 / SIGN_CYCLE_LENGTH; 
+  signBufferPosition = fmod(signBufferPosition + SIGN_STRIP_LENGTH * 2, SIGN_STRIP_LENGTH * 2);
+  unsigned int basePosition = floor(signBufferPosition);
+  float fractionalPosition = fmod(signBufferPosition, 1.0);
+  for (int i = 0; i < SIGN_STRIP_LENGTH; i++) {
+    unsigned int pos = basePosition + i;
+    RGB color = signBuffer[pos].interpolate(signBuffer[pos + 1], fractionalPosition);
+    signWriteBuffer[i] = color;
+  }
+  signStrip.write(signWriteBuffer, SIGN_STRIP_LENGTH);
 }
 
 void writeStripeColors() {
