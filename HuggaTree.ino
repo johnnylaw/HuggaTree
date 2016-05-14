@@ -8,25 +8,27 @@
 #include <ARMLightStrip.h>
 #include <BreathingColor.h>
 
-#define STRIP_LENGTH 120
-#define SIGN_STRIP_LENGTH 22
-
+#define STRIP_LENGTH 150
+#define SIGN_STRIP_LENGTH 19
+#define STRIP_WRITE_INTERVAL 50
+#define SENSOR_POLL_INTERVAL 100
+#define SIGN_CYCLE_LENGTH 42
 #define NUM_STRIPS 5 // maybe need this
 
 static float stripAngles[NUM_STRIPS];
-static ARMLightStrip<53> strip0;
-static ARMLightStrip<51> strip1;
-static ARMLightStrip<49> strip2;
-static ARMLightStrip<47> strip3;
-static ARMLightStrip<45> strip4;
-static ARMLightStrip<43> signStrip;
+static ARMLightStrip<51> strip0;
+static ARMLightStrip<53> strip1;
+static ARMLightStrip<45> strip2;
+static ARMLightStrip<43> strip3;
+static ARMLightStrip<41> strip4;
+static ARMLightStrip<37> signStrip;
 
 static RGB writeBuffer[STRIP_LENGTH];
 
-static RGB signBuffer[SIGN_STRIP_LENGTH * 2 + 1];
+static RGB signBuffer[SIGN_STRIP_LENGTH * 4 + 1];
 static RGB signWriteBuffer[SIGN_STRIP_LENGTH];
 
-float signBufferPosition = 0;
+float signBufferPosition = SIGN_STRIP_LENGTH;
 
 static ARMLightStripBase * strips[NUM_STRIPS] = {&strip0, &strip1, &strip2, &strip3, &strip4};
 static RGB colorBuffer[STRIP_LENGTH];
@@ -58,13 +60,13 @@ static Breath breath;
 
 void setup() {
   Serial.begin(115200);
-  Timer.getAvailable().attachInterrupt(writeStrips).start(50 * 1000);
-  Timer.getAvailable().attachInterrupt(readSensor).start(100 * 1000);
+  Timer.getAvailable().attachInterrupt(writeStrips).start(STRIP_WRITE_INTERVAL * 1000);
+  Timer.getAvailable().attachInterrupt(readSensor).start(SENSOR_POLL_INTERVAL * 1000);
 //  setUpStripeColorBuffer();
 
   for (int i = 0; i < NUM_STRIPS; i++) stripAngles[i] = (float)i / (float)NUM_STRIPS;
-  setUpRainbowColorBuffer(rainbowColorBuffer, STRIP_LENGTH);
-  extendBufferWithCopy(rainbowColorBuffer, STRIP_LENGTH);
+//  setUpRainbowColorBuffer(rainbowColorBuffer, STRIP_LENGTH);
+//  extendBufferWithCopy(rainbowColorBuffer, STRIP_LENGTH);
   
   setUpRainbowColorBuffer(signBuffer, SIGN_STRIP_LENGTH * 2);
   extendBufferWithCopy(signBuffer, SIGN_STRIP_LENGTH * 2);
@@ -75,13 +77,14 @@ void setup() {
 void setUpRainbowColorBuffer(RGB *bfr, int bulbCount) {
   for (int i = 0; i < bulbCount; i++) {
     float hue = (float)i / (float)bulbCount;
-    bfr[i] = RGB(hue, 1.0);
+    RGB color = RGB(hue, 1.0);
+    bfr[i] = color;
   }
 }
 
 void extendBufferWithCopy(RGB *bfr, int count) {
   for (int i = 0; i < count; i++) bfr[i + count] = bfr[i];
-  bfr[2 * count + 1] = bfr[0];
+  bfr[2 * count] = bfr[0];
 }
 
 void setUpStripeColorBuffer() {
@@ -144,5 +147,5 @@ void writeBreathingStrip() {
 //    if (fullness >= 0.7 && i < 139 && i > 135) color.print();
     colorBuffer[i] = color;
   }
-  strip0.write(colorBuffer, 150);
+  strip1.write(colorBuffer, 150);
 }
