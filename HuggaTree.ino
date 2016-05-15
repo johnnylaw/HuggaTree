@@ -3,7 +3,8 @@
 #include <Breath.h>
 #include <FIRFilter.h>
 #include <BreathingStrip.h>
-#include <PressureSensor.h>
+#include <CalibratedSensor.h>
+#include <SensorArray.h>
 #include <RGB.h>
 #include <ARMLightStrip.h>
 #include <BreathingColor.h>
@@ -13,7 +14,7 @@
 #define STRIP_WRITE_INTERVAL 50
 #define SENSOR_POLL_INTERVAL 100
 #define SIGN_CYCLE_LENGTH 42
-#define NUM_STRIPS 5 // maybe need this
+#define NUM_STRIPS 5
 
 static float stripAngles[NUM_STRIPS];
 static ARMLightStrip<51> strip0;
@@ -54,7 +55,14 @@ static FIRFilter<10, int> firFilter(firCoefficients);
 //static float firCoefficients[] = {1.0};
 //static FIRFilter<1, int> firFilter(firCoefficients);
 
-static PressureSensor<120> pressureSensor;
+typedef CalibratedSensor<30> CalSensor;
+static CalSensor sensors[4] = {
+  CalSensor(A0, 0),
+  CalSensor(A1, 1),
+  CalSensor(A2, 2),
+  CalSensor(A3, 3)
+};
+static SensorArray<CalSensor> sensorArray = SensorArray<CalSensor>(sensors, 4);
 
 static Breath breath;
 
@@ -101,7 +109,7 @@ void setUpStripeColorBuffer() {
 }
 
 void readSensor() {
-  firFilter.push(pressureSensor.read(analogRead(A2)));
+  firFilter.push(sensorArray.readMax(2));
 }
 
 void loop() {
@@ -145,14 +153,13 @@ void writeBreathingColor() {
 
 void writeBreathingStrip() {
   breath.advance(50);
-  float hugStrength = firFilter.read() / 4095.0;
+  float hugStrength = firFilter.read() / 8191.0;
   float fullness = breath.fullness() * (0.7 + hugStrength * 0.3);
   breath.setExcitement(hugStrength);
   breathingStrip.setExcitement(hugStrength);
   for (int i = 0; i < 150; i++) {
     RGB color = breathingStrip.value(fullness, i);
-//    if (fullness >= 0.7 && i < 139 && i > 135) color.print();
     colorBuffer[i] = color;
   }
-  strip1.write(colorBuffer, 150);
+  for (int i = 0; i < NUM_STRIPS; i++) strips[i]->write(colorBuffer, 150);
 }
