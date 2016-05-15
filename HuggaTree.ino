@@ -25,6 +25,7 @@ static ARMLightStrip<41> strip4;
 static ARMLightStrip<37> signStrip;
 
 static RGB writeBuffer[STRIP_LENGTH];
+float hugStrength;
 
 static RGB signBuffer[SIGN_STRIP_LENGTH * 4 + 1];
 static RGB signWriteBuffer[SIGN_STRIP_LENGTH];
@@ -50,7 +51,7 @@ static RGB stripeColorBuffer[STRIP_LENGTH * 2];
 static RGB rainbowColorBuffer[STRIP_LENGTH * 2 + 1];
 
 int stripePointer = 150;
-static float firCoefficients[] = {0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1};
+static int firCoefficients[10] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 static FIRFilter<10, int> firFilter(firCoefficients);
 //static float firCoefficients[] = {1.0};
 //static FIRFilter<1, int> firFilter(firCoefficients);
@@ -110,6 +111,7 @@ void setUpStripeColorBuffer() {
 
 void readSensor() {
   firFilter.push(sensorArray.readMax(2));
+  hugStrength = min(77000, firFilter.read()) / 77000.0;
 }
 
 void loop() {
@@ -153,7 +155,6 @@ void writeBreathingColor() {
 
 void writeBreathingStrip() {
   breath.advance(50);
-  float hugStrength = firFilter.read() / 8191.0;
   float fullness = breath.fullness() * (0.7 + hugStrength * 0.3);
   breath.setExcitement(hugStrength);
   breathingStrip.setExcitement(hugStrength);
