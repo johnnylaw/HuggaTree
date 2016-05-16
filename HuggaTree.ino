@@ -47,7 +47,7 @@ static BreathingColor bgColor = BreathingColor(bgColors[0], bgColors[1], 4000, 0
 
 //static BreathingStrip breathingStrip = BreathingStrip(RGB(50, 0, 12), RGB(50, 255, 255), 150);
 //static BreathingStrip breathingStrip = BreathingStrip(RGB(6, 0, 2), RGB(30, 0, 8), RGB(15, 255, 255), 150);
-static BreathingStrip breathingStrip = BreathingStrip(RGB(200, 40, 0), RGB(255, 50, 0), RGB(15, 255, 255), 150);
+static BreathingStrip breathingStrip = BreathingStrip(RGB(0, 1, 5), RGB(0, 2, 10), RGB(255, 50, 0), STRIP_LENGTH);
 
 static RGB stripeColors[2] = { {100, 20, 0}, {100, 0, 60} };
 static RGB stripeColorBuffer[STRIP_LENGTH * 2];
@@ -126,7 +126,8 @@ void writeStrips() {
   //  writeBreathingColor();
   //  writeStripeColors();
 //  writeBreathingStrip();
-  writeRainbowToStrips(hugStrength);
+  if (hugStrength < 0.1) writeBreathingStrip();
+  else writeRainbowToStrips(hugStrength);
   writeSignStrip();
 }
 
