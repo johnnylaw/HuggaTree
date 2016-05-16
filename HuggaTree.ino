@@ -11,9 +11,11 @@
 
 #define STRIP_LENGTH 150
 #define SIGN_STRIP_LENGTH 19
+#define SIGN_STRIP_BUFFER_MULTIPLIER 40
+#define SIGN_STRIP_HALF_BUFFER_LENGTH (SIGN_STRIP_LENGTH * SIGN_STRIP_BUFFER_MULTIPLIER)
 #define STRIP_WRITE_INTERVAL 50
 #define SENSOR_POLL_INTERVAL 100
-#define SIGN_CYCLE_LENGTH 42
+#define SIGN_CYCLE_LENGTH 40
 #define NUM_STRIPS 5
 
 static float stripAngles[NUM_STRIPS];
@@ -27,23 +29,25 @@ static ARMLightStrip<37> signStrip;
 static RGB writeBuffer[STRIP_LENGTH];
 float hugStrength;
 
-static RGB signBuffer[SIGN_STRIP_LENGTH * 4 + 1];
-static RGB signWriteBuffer[SIGN_STRIP_LENGTH];
+static RGB signBuffer[SIGN_STRIP_HALF_BUFFER_LENGTH * 2 + 1];
+static RGB signWriteBuffer[SIGN_STRIP_HALF_BUFFER_LENGTH];
 
-float signBufferPosition = SIGN_STRIP_LENGTH;
+int signBufferPosition = SIGN_STRIP_HALF_BUFFER_LENGTH;
+int bufferPosition = 0;
 
 static ARMLightStripBase * strips[NUM_STRIPS] = {&strip0, &strip1, &strip2, &strip3, &strip4};
 static RGB colorBuffer[STRIP_LENGTH];
 
 //static RGB bgColors[2] = { {50, 0, 24}, {100, 0, 50}};  // log
 //static RGB bgColors[2] = { {71, 0, 35}, {175, 0, 87}};  // log
-//static RGB bgColors[2] = { {20, 0, 5}, {120, 0, 30}}; // linear 
+//static RGB bgColors[2] = { {20, 0, 5}, {120, 0, 30}}; // linear
 static RGB bgColors[2] = { {50, 0, 12}, {110, 0, 40}}; // linear SLOW
 static BreathingColor bgColor = BreathingColor(bgColors[0], bgColors[1], 4000, 0.57);
 //static BreathingColor bgColor = BreathingColor(bgColors[0], bgColors[1], 1200, 0.9);
 
 //static BreathingStrip breathingStrip = BreathingStrip(RGB(50, 0, 12), RGB(50, 255, 255), 150);
-static BreathingStrip breathingStrip = BreathingStrip(RGB(6, 0, 2), RGB(30, 0, 8), RGB(15, 255, 255), 150);
+//static BreathingStrip breathingStrip = BreathingStrip(RGB(6, 0, 2), RGB(30, 0, 8), RGB(15, 255, 255), 150);
+static BreathingStrip breathingStrip = BreathingStrip(RGB(200, 40, 0), RGB(255, 50, 0), RGB(15, 255, 255), 150);
 
 static RGB stripeColors[2] = { {100, 20, 0}, {100, 0, 60} };
 static RGB stripeColorBuffer[STRIP_LENGTH * 2];
@@ -71,14 +75,14 @@ void setup() {
   Serial.begin(115200);
   Timer.getAvailable().attachInterrupt(writeStrips).start(STRIP_WRITE_INTERVAL * 1000);
   Timer.getAvailable().attachInterrupt(readSensor).start(SENSOR_POLL_INTERVAL * 1000);
-//  setUpStripeColorBuffer();
+  //  setUpStripeColorBuffer();
 
   for (int i = 0; i < NUM_STRIPS; i++) stripAngles[i] = (float)i / (float)NUM_STRIPS;
-//  setUpRainbowColorBuffer(rainbowColorBuffer, STRIP_LENGTH);
-//  extendBufferWithCopy(rainbowColorBuffer, STRIP_LENGTH);
-  
-  setUpRainbowColorBuffer(signBuffer, SIGN_STRIP_LENGTH * 2);
-  extendBufferWithCopy(signBuffer, SIGN_STRIP_LENGTH * 2);
+    setUpRainbowColorBuffer(rainbowColorBuffer, STRIP_LENGTH);
+    extendBufferWithCopy(rainbowColorBuffer, STRIP_LENGTH);
+
+  setUpRainbowColorBuffer(signBuffer, SIGN_STRIP_LENGTH * SIGN_STRIP_BUFFER_MULTIPLIER);
+  extendBufferWithCopy(signBuffer, SIGN_STRIP_LENGTH * SIGN_STRIP_BUFFER_MULTIPLIER);
   Serial.println("Begin signal filtering");
   analogReadResolution(12);
 }
@@ -119,20 +123,29 @@ void loop() {
 }
 
 void writeStrips() {
-//  writeBreathingColor();
-//  writeStripeColors();
-  writeBreathingStrip();
+  //  writeBreathingColor();
+  //  writeStripeColors();
+//  writeBreathingStrip();
+  writeRainbowToStrips(hugStrength);
   writeSignStrip();
 }
 
+void writeRainbowToStrips(float strength) {
+  RGB color;
+  bufferPosition = (bufferPosition - (int)(5 * strength) + STRIP_LENGTH) % STRIP_LENGTH;
+  unsigned int positions[NUM_STRIPS];
+  for (int i = 0; i < NUM_STRIPS; i++) positions[i] = (bufferPosition + STRIP_LENGTH - i * 3) % STRIP_LENGTH;
+  for (int i = 0; i < NUM_STRIPS; i++) {
+    for (int j = 0; j < STRIP_LENGTH; j++) writeBuffer[j] = rainbowColorBuffer[positions[i]] * strength;
+    if (strength > 0.9) writeBuffer[random(STRIP_LENGTH)] = {255, 255, 255};
+    strips[i]->write(writeBuffer, STRIP_LENGTH);
+  }
+}
+
 void writeSignStrip() {
-  signBufferPosition -= (SIGN_STRIP_LENGTH * 2) * STRIP_WRITE_INTERVAL / 1000.0 / SIGN_CYCLE_LENGTH; 
-  signBufferPosition = fmod(signBufferPosition + SIGN_STRIP_LENGTH * 2, SIGN_STRIP_LENGTH * 2);
-  unsigned int basePosition = floor(signBufferPosition);
-  float fractionalPosition = fmod(signBufferPosition, 1.0);
+  signBufferPosition = (SIGN_STRIP_HALF_BUFFER_LENGTH + signBufferPosition - 1) % SIGN_STRIP_HALF_BUFFER_LENGTH;
   for (int i = 0; i < SIGN_STRIP_LENGTH; i++) {
-    unsigned int pos = basePosition + i;
-    RGB color = signBuffer[pos].interpolate(signBuffer[pos + 1], fractionalPosition);
+    RGB color = signBuffer[signBufferPosition + i * SIGN_STRIP_BUFFER_MULTIPLIER / 2];
     signWriteBuffer[i] = color;
   }
   signStrip.write(signWriteBuffer, SIGN_STRIP_LENGTH);
