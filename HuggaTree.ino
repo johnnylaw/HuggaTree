@@ -9,7 +9,7 @@
 #include <ARMLightStrip.h>
 #include <BreathingColor.h>
 
-#define STRIP_LENGTH 150
+#define STRIP_LENGTH 120
 #define SIGN_STRIP_LENGTH 19
 #define SIGN_STRIP_BUFFER_MULTIPLIER 40
 #define SIGN_STRIP_HALF_BUFFER_LENGTH (SIGN_STRIP_LENGTH * SIGN_STRIP_BUFFER_MULTIPLIER)
@@ -128,14 +128,22 @@ void writeStrips() {
   writeSignStrip();
 }
 
+const int sparkleLength = 3;
 void writeRainbowToStrips(float strength) {
   RGB color;
+  float power = pow(strength, 2);
   bufferPosition = (bufferPosition - (int)(5 * strength) + STRIP_LENGTH) % STRIP_LENGTH;
   unsigned int positions[NUM_STRIPS];
   for (int i = 0; i < NUM_STRIPS; i++) positions[i] = (bufferPosition + STRIP_LENGTH - i * 3) % STRIP_LENGTH;
+  int sparkleBrightness = 64 + (strength - 0.8) * 191 * 5;
   for (int i = 0; i < NUM_STRIPS; i++) {
-    for (int j = 0; j < STRIP_LENGTH; j++) writeBuffer[j] = rainbowColorBuffer[positions[i]] * strength;
-    if (strength > 0.9) writeBuffer[random(STRIP_LENGTH)] = {255, 255, 255};
+    for (int j = 0; j < STRIP_LENGTH; j++) writeBuffer[j] = rainbowColorBuffer[positions[i]++] * power;
+    if (strength > 0.8) {
+      int sparkleBase = random(STRIP_LENGTH - sparkleLength);
+      for (int j = 0; j < sparkleLength; j++) {
+        writeBuffer[sparkleBase++] = {sparkleBrightness, sparkleBrightness, sparkleBrightness};
+      }
+    }
     strips[i]->write(writeBuffer, STRIP_LENGTH);
   }
 }
