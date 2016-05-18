@@ -38,16 +38,13 @@ int bufferPosition = 0;
 static ARMLightStripBase * strips[NUM_STRIPS] = {&strip0, &strip1, &strip2, &strip3, &strip4};
 static RGB colorBuffer[STRIP_LENGTH];
 
-//static RGB bgColors[2] = { {50, 0, 24}, {100, 0, 50}};  // log
-//static RGB bgColors[2] = { {71, 0, 35}, {175, 0, 87}};  // log
-//static RGB bgColors[2] = { {20, 0, 5}, {120, 0, 30}}; // linear
-static RGB bgColors[2] = { {50, 0, 12}, {110, 0, 40}}; // linear SLOW
-static BreathingColor bgColor = BreathingColor(bgColors[0], bgColors[1], 4000, 0.57);
+static RGB bgColors[2] = { {0,2, 5}, {0, 13, 37}};
+static BreathingColor bgColor = BreathingColor(bgColors[0], bgColors[1], 4500, 0.65);
 //static BreathingColor bgColor = BreathingColor(bgColors[0], bgColors[1], 1200, 0.9);
 
 //static BreathingStrip breathingStrip = BreathingStrip(RGB(50, 0, 12), RGB(50, 255, 255), 150);
 //static BreathingStrip breathingStrip = BreathingStrip(RGB(6, 0, 2), RGB(30, 0, 8), RGB(15, 255, 255), 150);
-static BreathingStrip breathingStrip = BreathingStrip(RGB(0, 1, 5), RGB(0, 2, 10), RGB(255, 50, 0), STRIP_LENGTH);
+static BreathingStrip breathingStrip = BreathingStrip(RGB(0, 2, 5), RGB(0, 4, 20), RGB(255, 50, 0), STRIP_LENGTH);
 
 static RGB stripeColors[2] = { {100, 20, 0}, {100, 0, 60} };
 static RGB stripeColorBuffer[STRIP_LENGTH * 2];
@@ -126,7 +123,7 @@ void writeStrips() {
   //  writeBreathingColor();
   //  writeStripeColors();
 //  writeBreathingStrip();
-  if (hugStrength < 0.1) writeBreathingStrip();
+  if (hugStrength < 0.1) writeBreathingColor();
   else writeRainbowToStrips(hugStrength);
   writeSignStrip();
 }
@@ -161,10 +158,10 @@ void writeStripeColors() {
 void writeBreathingColor() {
   bgColor.breathe(50);
   RGB color = bgColor.color();
-  for (int i = 0; i < 150; i++) {
+  for (int i = 0; i < STRIP_LENGTH; i++) {
     colorBuffer[i] = color;
   }
-  strip0.write(colorBuffer, 150);
+  for (int i = 0; i < NUM_STRIPS; i++) strips[i]->write(colorBuffer, STRIP_LENGTH);
 }
 
 void writeBreathingStrip() {
