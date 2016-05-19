@@ -17,6 +17,7 @@
 #define SENSOR_POLL_INTERVAL 100
 #define SIGN_CYCLE_LENGTH 40
 #define NUM_STRIPS 5
+#define RAINBOW_STRIP_MULTIPLIER 3
 
 static float stripAngles[NUM_STRIPS];
 static ARMLightStrip<51> strip0;
@@ -49,7 +50,7 @@ static BreathingStrip breathingStrip = BreathingStrip(RGB(0, 2, 5), RGB(0, 4, 20
 static RGB stripeColors[2] = { {100, 20, 0}, {100, 0, 60} };
 static RGB stripeColorBuffer[STRIP_LENGTH * 2];
 
-static RGB rainbowColorBuffer[STRIP_LENGTH * 2 + 1];
+static RGB rainbowColorBuffer[STRIP_LENGTH * 2 * RAINBOW_STRIP_MULTIPLIER + 1];
 
 int stripePointer = 150;
 static int firCoefficients[10] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
@@ -75,8 +76,8 @@ void setup() {
   //  setUpStripeColorBuffer();
 
   for (int i = 0; i < NUM_STRIPS; i++) stripAngles[i] = (float)i / (float)NUM_STRIPS;
-    setUpRainbowColorBuffer(rainbowColorBuffer, STRIP_LENGTH);
-    extendBufferWithCopy(rainbowColorBuffer, STRIP_LENGTH);
+    setUpRainbowColorBuffer(rainbowColorBuffer, STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER);
+    extendBufferWithCopy(rainbowColorBuffer, STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER);
 
   setUpRainbowColorBuffer(signBuffer, SIGN_STRIP_LENGTH * SIGN_STRIP_BUFFER_MULTIPLIER);
   extendBufferWithCopy(signBuffer, SIGN_STRIP_LENGTH * SIGN_STRIP_BUFFER_MULTIPLIER);
