@@ -72,7 +72,7 @@ static Breath breath;
 
 void setup() {
   Serial.begin(115200);
-  Timer.getAvailable().attachInterrupt(writeStrips).start(STRIP_WRITE_INTERVAL * 1000);
+  Timer.getAvailable().attachInterrupt(makeDisplay).start(STRIP_WRITE_INTERVAL * 1000);
   Timer.getAvailable().attachInterrupt(readSensor).start(SENSOR_POLL_INTERVAL * 1000);
   //  setUpStripeColorBuffer();
 
@@ -121,7 +121,7 @@ void loop() {
   delay(12348123);
 }
 
-void writeStrips() {
+void makeDisplay() {
   //  writeBreathingColor();
   //  writeStripeColors();
 //  writeBreathingStrip();
