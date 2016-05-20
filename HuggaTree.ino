@@ -121,8 +121,10 @@ void loop() {
 }
 
 typedef void (*stripSetupFunction) (float s);
-const int numSetupFunctions = 2;
+const int numSetupFunctions = 4;
 static stripSetupFunction stripSetupFunctions[numSetupFunctions] = {
+  setUpBreathBubble,
+  setUpBreathBubble,
   setUpBreathBubble,
   setUpRainbowSpiral,
 };
