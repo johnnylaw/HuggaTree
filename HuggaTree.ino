@@ -116,7 +116,7 @@ void loop() {
 
 void makeDisplay() {
   if (hugStrength < 0.1) setUpBreathingColor(hugStrength * 5);
-  else writeRainbowToStrips(hugStrength);
+  else setUpRainbowSpiral(hugStrength);
 
   writeSignStrip();
   writeStrips();
@@ -128,7 +128,7 @@ void writeStrips() {
   }
 }
 
-void writeRainbowToStrips(float strength) {
+void setUpRainbowSpiral(float strength) {
   RGB color;
   float power = pow(strength, 2);
   bufferPosition = (bufferPosition - (int)(12 * strength) + STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER) % (STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER);
@@ -137,7 +137,7 @@ void writeRainbowToStrips(float strength) {
   for (int i = 0; i < NUM_STRIPS; i++) {
     for (int j = 0; j < STRIP_LENGTH; j++) writeBuffers[i][j] = rainbowColorBuffer[positions[i]++] * power;
   }
-  
+
   if (strength > MIN_SPARKLE_STRENGTH) addSparkles(3, strength);
 }
 
