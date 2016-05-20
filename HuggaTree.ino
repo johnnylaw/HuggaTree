@@ -2,7 +2,6 @@
 #include <DueTimer.h>
 #include <Breath.h>
 #include <FIRFilter.h>
-#include <BreathingStrip.h>
 #include <CalibratedSensor.h>
 #include <SensorArray.h>
 #include <RGB.h>
@@ -42,7 +41,7 @@ static RGB colorBuffer[STRIP_LENGTH];
 
 static RGB bgColors[2] = { {0, 4, 2}, {0, 17, 7}};
 static BreathingColor bgColor = BreathingColor(bgColors[0], bgColors[1], 4500, 0.65);
-static BreathingStrip breathingStrip = BreathingStrip(RGB(0, 2, 5), RGB(0, 4, 20), RGB(255, 50, 0), STRIP_LENGTH);
+// static BreathingStrip breathingStrip = BreathingStrip(RGB(0, 2, 5), RGB(0, 4, 20), RGB(255, 50, 0), STRIP_LENGTH);
 
 static RGB stripeColors[2] = { {100, 20, 0}, {100, 0, 60} };
 static RGB stripeColorBuffer[STRIP_LENGTH * 2];
@@ -239,14 +238,14 @@ void setUpBreathingColor(float hugStrength, bool oneStripOnly) {
   }
 }
 
-void writeBreathingStrip() {
-  breath.advance(50);
-  float fullness = breath.fullness() * (0.7 + hugStrength * 0.3);
-  breath.setExcitement(hugStrength);
-  breathingStrip.setExcitement(hugStrength);
-  for (int i = 0; i < 150; i++) {
-    RGB color = breathingStrip.value(fullness, i);
-    colorBuffer[i] = color;
-  }
-  for (int i = 0; i < NUM_STRIPS; i++) strips[i]->write(colorBuffer, 150);
-}
+// void writeBreathingStrip() {
+//   breath.advance(50);
+//   float fullness = breath.fullness() * (0.7 + hugStrength * 0.3);
+//   breath.setExcitement(hugStrength);
+//   breathingStrip.setExcitement(hugStrength);
+//   for (int i = 0; i < 150; i++) {
+//     RGB color = breathingStrip.value(fullness, i);
+//     colorBuffer[i] = color;
+//   }
+//   for (int i = 0; i < NUM_STRIPS; i++) strips[i]->write(colorBuffer, 150);
+// }
