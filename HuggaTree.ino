@@ -105,11 +105,12 @@ void setUpStripeColorBuffer() {
   }
 }
 
-const float hugThresholds[2] = { 0.2, 0.3 };
+const float hugThresholds[2] = { 0.1, 0.3 };
 bool hugMetThreshold = false;
 int hugCount = 0;
 int numHugsRequired = 3;
 bool newHug = true;
+
 void readSensor() {
   firFilter.push(sensorArray.readMax(2));
   hugStrength = min(77000, firFilter.read()) / 77000.0;
@@ -228,7 +229,7 @@ void writeStripeColors() {
 }
 
 void setUpBreathingColor(float hugStrength, bool oneStripOnly) {
-  bgColor.breathe(50 + hugStrength * 20);
+  bgColor.breathe(50 + hugStrength * 70);
   RGB color = bgColor.color();
   for (int j = 0; j < STRIP_LENGTH; j++) {
     int numStrips = oneStripOnly ? 1 : NUM_STRIPS;
