@@ -18,6 +18,7 @@
 #define SIGN_CYCLE_LENGTH 40
 #define NUM_STRIPS 5
 #define RAINBOW_STRIP_MULTIPLIER 3
+#define MIN_SPARKLE_STRENGTH 0.7
 
 static float stripAngles[NUM_STRIPS];
 static ARMLightStrip<51> strip0;
@@ -39,7 +40,7 @@ int bufferPosition = 0;
 static ARMLightStripBase * strips[NUM_STRIPS] = {&strip0, &strip1, &strip2, &strip3, &strip4};
 static RGB colorBuffer[STRIP_LENGTH];
 
-static RGB bgColors[2] = { {0,2, 5}, {0, 13, 37}};
+static RGB bgColors[2] = { {0, 4, 2}, {0, 17, 7}};
 static BreathingColor bgColor = BreathingColor(bgColors[0], bgColors[1], 4500, 0.65);
 //static BreathingColor bgColor = BreathingColor(bgColors[0], bgColors[1], 1200, 0.9);
 
@@ -76,19 +77,19 @@ void setup() {
   //  setUpStripeColorBuffer();
 
   for (int i = 0; i < NUM_STRIPS; i++) stripAngles[i] = (float)i / (float)NUM_STRIPS;
-    setUpRainbowColorBuffer(rainbowColorBuffer, STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER);
+    setUpRainbowColorBuffer(rainbowColorBuffer, STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER, 1.0);
     extendBufferWithCopy(rainbowColorBuffer, STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER);
 
-  setUpRainbowColorBuffer(signBuffer, SIGN_STRIP_LENGTH * SIGN_STRIP_BUFFER_MULTIPLIER);
+  setUpRainbowColorBuffer(signBuffer, SIGN_STRIP_LENGTH * SIGN_STRIP_BUFFER_MULTIPLIER, 0.23);
   extendBufferWithCopy(signBuffer, SIGN_STRIP_LENGTH * SIGN_STRIP_BUFFER_MULTIPLIER);
   Serial.println("Begin signal filtering");
   analogReadResolution(12);
 }
 
-void setUpRainbowColorBuffer(RGB *bfr, int bulbCount) {
+void setUpRainbowColorBuffer(RGB *bfr, int bulbCount, float strength) {
   for (int i = 0; i < bulbCount; i++) {
     float hue = (float)i / (float)bulbCount;
-    RGB color = RGB(hue, 1.0);
+    RGB color = RGB(hue, strength);
     bfr[i] = color;
   }
 }
@@ -133,13 +134,13 @@ const int sparkleLength = 3;
 void writeRainbowToStrips(float strength) {
   RGB color;
   float power = pow(strength, 2);
-  bufferPosition = (bufferPosition - (int)(5 * strength) + STRIP_LENGTH) % STRIP_LENGTH;
+  bufferPosition = (bufferPosition - (int)(12 * strength) + STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER) % (STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER);
   unsigned int positions[NUM_STRIPS];
-  for (int i = 0; i < NUM_STRIPS; i++) positions[i] = (bufferPosition + STRIP_LENGTH - i * 3) % STRIP_LENGTH;
-  int sparkleBrightness = 64 + (strength - 0.8) * 191 * 5;
+  for (int i = 0; i < NUM_STRIPS; i++) positions[i] = (bufferPosition + STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER - i * 12) % (STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER);
+  int sparkleBrightness = 64 + (strength - MIN_SPARKLE_STRENGTH) * 191 * (1 - MIN_SPARKLE_STRENGTH);
   for (int i = 0; i < NUM_STRIPS; i++) {
     for (int j = 0; j < STRIP_LENGTH; j++) writeBuffer[j] = rainbowColorBuffer[positions[i]++] * power;
-    if (strength > 0.8) {
+    if (strength > MIN_SPARKLE_STRENGTH) {
       int sparkleBase = random(STRIP_LENGTH - sparkleLength);
       for (int j = 0; j < sparkleLength; j++) {
         writeBuffer[sparkleBase++] = {sparkleBrightness, sparkleBrightness, sparkleBrightness};
