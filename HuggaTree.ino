@@ -28,7 +28,7 @@ static ARMLightStrip<43> strip3;
 static ARMLightStrip<41> strip4;
 static ARMLightStrip<37> signStrip;
 
-static RGB writeBuffer[STRIP_LENGTH];
+static RGB writeBuffers[NUM_STRIPS][STRIP_LENGTH];
 float hugStrength;
 
 static RGB signBuffer[SIGN_STRIP_HALF_BUFFER_LENGTH * 2 + 1];
@@ -139,14 +139,14 @@ void writeRainbowToStrips(float strength) {
   for (int i = 0; i < NUM_STRIPS; i++) positions[i] = (bufferPosition + STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER - i * 12) % (STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER);
   int sparkleBrightness = 64 + (strength - MIN_SPARKLE_STRENGTH) * 191 * (1 - MIN_SPARKLE_STRENGTH);
   for (int i = 0; i < NUM_STRIPS; i++) {
-    for (int j = 0; j < STRIP_LENGTH; j++) writeBuffer[j] = rainbowColorBuffer[positions[i]++] * power;
+    for (int j = 0; j < STRIP_LENGTH; j++) writeBuffers[i][j] = rainbowColorBuffer[positions[i]++] * power;
     if (strength > MIN_SPARKLE_STRENGTH) {
       int sparkleBase = random(STRIP_LENGTH - sparkleLength);
       for (int j = 0; j < sparkleLength; j++) {
-        writeBuffer[sparkleBase++] = {sparkleBrightness, sparkleBrightness, sparkleBrightness};
+        writeBuffers[i][sparkleBase++] = {sparkleBrightness, sparkleBrightness, sparkleBrightness};
       }
     }
-    strips[i]->write(writeBuffer, STRIP_LENGTH);
+    strips[i]->write(writeBuffers[i], STRIP_LENGTH);
   }
 }
 
