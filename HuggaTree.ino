@@ -127,6 +127,7 @@ static stripSetupFunction stripSetupFunctions[numSetupFunctions] = {
 };
 
 void makeDisplay() {
+  determineHugCount();
   if (hugStrength < 0.1) setUpBreathingColor(hugStrength * 5, false);
   else {
     stripSetupFunctions[getStripSetupFunctionIndex()](hugStrength);
@@ -134,6 +135,19 @@ void makeDisplay() {
 
   writeSignStrip();
   writeStrips();
+}
+
+void determineHugCount() {
+  newHug = false;
+  if (hugStrength > hugThresholds[1]) hugMetThreshold = true;
+  else if (hugMetThreshold && hugStrength < hugThresholds[0]) {
+    hugCount++;
+    newHug = true;
+  }
+  if (hugCount >= numHugsRequired) {
+    numHugsRequired = random(5);
+    hugCount = 0;
+  }
 }
 
 int setUpFunctionPointer = 0;
