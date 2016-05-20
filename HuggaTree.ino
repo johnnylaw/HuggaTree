@@ -128,12 +128,14 @@ void writeStrips() {
   }
 }
 
+const int spiralSpeedFactor = 12;
+const int spiralOffsetPerSpoke = 12;
 void setUpRainbowSpiral(float strength) {
   RGB color;
   float power = pow(strength, 2);
-  bufferPosition = (bufferPosition - (int)(12 * strength) + STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER) % (STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER);
+  bufferPosition = (bufferPosition - (int)(spiralSpeedFactor * strength) + STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER) % (STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER);
   unsigned int positions[NUM_STRIPS];
-  for (int i = 0; i < NUM_STRIPS; i++) positions[i] = (bufferPosition + STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER - i * 12) % (STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER);
+  for (int i = 0; i < NUM_STRIPS; i++) positions[i] = (bufferPosition + STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER - i * spiralOffsetPerSpoke) % (STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER);
   for (int i = 0; i < NUM_STRIPS; i++) {
     for (int j = 0; j < STRIP_LENGTH; j++) writeBuffers[i][j] = rainbowColorBuffer[positions[i]++] * power;
   }
