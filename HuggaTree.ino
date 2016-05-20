@@ -208,7 +208,8 @@ void setUpBreathingColor(float hugStrength, bool oneStripOnly) {
   bgColor.breathe(50 + hugStrength * 20);
   RGB color = bgColor.color();
   for (int j = 0; j < STRIP_LENGTH; j++) {
-    for (int i = 0; i < NUM_STRIPS; i++) writeBuffers[i][j] = color;
+    int numStrips = oneStripOnly ? 1 : NUM_STRIPS;
+    for (int i = 0; i < numStrips; i++) writeBuffers[i][j] = color;
   }
 }
 
