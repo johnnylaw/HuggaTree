@@ -162,8 +162,31 @@ void writeStrips() {
   }
 }
 
+RGB currentBreathBubbleColor = RGB(255, 0, 0);
+const int numberBreathBubbleColors = 4;
+const int breathBubbleLength = 10;
+static RGB breathBubbleColors[numberBreathBubbleColors] = {
+  {255, 0, 0},
+  {255, 40, 0},
+  {255, 0, 30},
+  {255, 80, 0}
+};
+
 void setUpBreathBubble(float strength) {
+  setUpBreathingColor(strength, true); // Write one strip only
+  if (newHug) currentBreathBubbleColor = breathBubbleColors[random(numberBreathBubbleColors)];
+  int start = max(0, strength * STRIP_LENGTH - breathBubbleLength);
+  int finish = start + breathBubbleLength - 1;
+  writeBuffers[0][start] = writeBuffers[0][finish] = writeBuffers[0][start].interpolate(currentBreathBubbleColor, 0.2);
+  writeBuffers[0][start + 1] = writeBuffers[0][finish - 1] = writeBuffers[0][start + 1].interpolate(currentBreathBubbleColor, 0.5);
+  for (int i = start + 2 ; i < start + breathBubbleLength - 2; i++) writeBuffers[0][i] = currentBreathBubbleColor;
+  for (int i = 1; i < NUM_STRIPS; i++) {
+    for (int j = 0; j < STRIP_LENGTH; j++) {
+      writeBuffers[i][j] = writeBuffers[0][j];
+    }
+  }
 }
+
 const int spiralSpeedFactor = 12;
 const int spiralOffsetPerSpoke = 12;
 void setUpRainbowSpiral(float strength) {
