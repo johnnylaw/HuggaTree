@@ -175,7 +175,7 @@ static RGB breathBubbleColors[numberBreathBubbleColors] = {
 
 void setUpBreathBubble(float strength) {
   setUpBreathingColor(strength, true); // Write one strip only
-  if (newHug) currentBreathBubbleColor = breathBubbleColors[random(numberBreathBubbleColors)];
+  if (newHug) currentBreathBubbleColor = breathBubbleColors[random(numberBreathBubbleColors)] * strength;
   int start = max(0, strength * STRIP_LENGTH - breathBubbleLength);
   int finish = start + breathBubbleLength - 1;
   writeBuffers[0][start] = writeBuffers[0][finish] = writeBuffers[0][start].interpolate(currentBreathBubbleColor, 0.2);
