@@ -128,21 +128,25 @@ void writeStrips() {
   }
 }
 
-const int sparkleLength = 3;
 void writeRainbowToStrips(float strength) {
   RGB color;
   float power = pow(strength, 2);
   bufferPosition = (bufferPosition - (int)(12 * strength) + STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER) % (STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER);
   unsigned int positions[NUM_STRIPS];
   for (int i = 0; i < NUM_STRIPS; i++) positions[i] = (bufferPosition + STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER - i * 12) % (STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER);
-  int sparkleBrightness = 64 + (strength - MIN_SPARKLE_STRENGTH) * 191 * (1 - MIN_SPARKLE_STRENGTH);
   for (int i = 0; i < NUM_STRIPS; i++) {
     for (int j = 0; j < STRIP_LENGTH; j++) writeBuffers[i][j] = rainbowColorBuffer[positions[i]++] * power;
-    if (strength > MIN_SPARKLE_STRENGTH) {
-      int sparkleBase = random(STRIP_LENGTH - sparkleLength);
-      for (int j = 0; j < sparkleLength; j++) {
-        writeBuffers[i][sparkleBase++] = {sparkleBrightness, sparkleBrightness, sparkleBrightness};
-      }
+  }
+  
+  if (strength > MIN_SPARKLE_STRENGTH) addSparkles(3, strength);
+}
+
+void addSparkles(int sparkleLength, float strength) {
+  int sparkleBrightness = 64 + (strength - MIN_SPARKLE_STRENGTH) * 191 * (1 - MIN_SPARKLE_STRENGTH);
+  for (int i = 0; i < NUM_STRIPS; i++) {
+    int sparkleBase = max(random(STRIP_LENGTH - sparkleLength), 0);
+    for (int j = 0; j < sparkleLength; j++) {
+      writeBuffers[i][sparkleBase++] = {sparkleBrightness, sparkleBrightness, sparkleBrightness};
     }
   }
 }
