@@ -105,6 +105,11 @@ void setUpStripeColorBuffer() {
   }
 }
 
+const float hugThresholds[2] = { 0.2, 0.3 };
+bool hugMetThreshold = false;
+int hugCount = 0;
+int numHugsRequired = 3;
+bool newHug = true;
 void readSensor() {
   firFilter.push(sensorArray.readMax(2));
   hugStrength = min(77000, firFilter.read()) / 77000.0;
@@ -114,12 +119,27 @@ void loop() {
   delay(12348123);
 }
 
+typedef void (*stripSetupFunction) (float s);
+const int numSetupFunctions = 2;
+static stripSetupFunction stripSetupFunctions[numSetupFunctions] = {
+  setUpBreathBubble,
+  setUpRainbowSpiral,
+};
+
 void makeDisplay() {
-  if (hugStrength < 0.1) setUpBreathingColor(hugStrength * 5);
-  else setUpRainbowSpiral(hugStrength);
+  if (hugStrength < 0.1) setUpBreathingColor(hugStrength * 5, false);
+  else {
+    stripSetupFunctions[getStripSetupFunctionIndex()](hugStrength);
+  }
 
   writeSignStrip();
   writeStrips();
+}
+
+int setUpFunctionPointer = 0;
+int getStripSetupFunctionIndex() {
+  if (hugCount == 0) setUpFunctionPointer = (setUpFunctionPointer + 1) % numSetupFunctions;
+  return numSetupFunctions - 1; // Spiral for testing progress   //setUpFunctionPointer;
 }
 
 void writeStrips() {
@@ -128,6 +148,8 @@ void writeStrips() {
   }
 }
 
+void setUpBreathBubble(float strength) {
+}
 const int spiralSpeedFactor = 12;
 const int spiralOffsetPerSpoke = 12;
 void setUpRainbowSpiral(float strength) {
@@ -168,7 +190,7 @@ void writeStripeColors() {
   strip0.write(stripeColorBuffer + stripePointer, 150);
 }
 
-void setUpBreathingColor(float hugStrength) {
+void setUpBreathingColor(float hugStrength, bool oneStripOnly) {
   bgColor.breathe(50 + hugStrength * 20);
   RGB color = bgColor.color();
   for (int j = 0; j < STRIP_LENGTH; j++) {
