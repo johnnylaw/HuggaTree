@@ -42,10 +42,6 @@ static RGB colorBuffer[STRIP_LENGTH];
 
 static RGB bgColors[2] = { {0, 4, 2}, {0, 17, 7}};
 static BreathingColor bgColor = BreathingColor(bgColors[0], bgColors[1], 4500, 0.65);
-//static BreathingColor bgColor = BreathingColor(bgColors[0], bgColors[1], 1200, 0.9);
-
-//static BreathingStrip breathingStrip = BreathingStrip(RGB(50, 0, 12), RGB(50, 255, 255), 150);
-//static BreathingStrip breathingStrip = BreathingStrip(RGB(6, 0, 2), RGB(30, 0, 8), RGB(15, 255, 255), 150);
 static BreathingStrip breathingStrip = BreathingStrip(RGB(0, 2, 5), RGB(0, 4, 20), RGB(255, 50, 0), STRIP_LENGTH);
 
 static RGB stripeColors[2] = { {100, 20, 0}, {100, 0, 60} };
@@ -56,8 +52,6 @@ static RGB rainbowColorBuffer[STRIP_LENGTH * 2 * RAINBOW_STRIP_MULTIPLIER + 1];
 int stripePointer = 150;
 static int firCoefficients[10] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 static FIRFilter<10, int> firFilter(firCoefficients);
-//static float firCoefficients[] = {1.0};
-//static FIRFilter<1, int> firFilter(firCoefficients);
 
 typedef CalibratedSensor<30> CalSensor;
 static CalSensor sensors[4] = {
@@ -74,11 +68,10 @@ void setup() {
   Serial.begin(115200);
   Timer.getAvailable().attachInterrupt(makeDisplay).start(STRIP_WRITE_INTERVAL * 1000);
   Timer.getAvailable().attachInterrupt(readSensor).start(SENSOR_POLL_INTERVAL * 1000);
-  //  setUpStripeColorBuffer();
 
   for (int i = 0; i < NUM_STRIPS; i++) stripAngles[i] = (float)i / (float)NUM_STRIPS;
-    setUpRainbowColorBuffer(rainbowColorBuffer, STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER, 1.0);
-    extendBufferWithCopy(rainbowColorBuffer, STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER);
+  setUpRainbowColorBuffer(rainbowColorBuffer, STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER, 1.0);
+  extendBufferWithCopy(rainbowColorBuffer, STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER);
 
   setUpRainbowColorBuffer(signBuffer, SIGN_STRIP_LENGTH * SIGN_STRIP_BUFFER_MULTIPLIER, 0.23);
   extendBufferWithCopy(signBuffer, SIGN_STRIP_LENGTH * SIGN_STRIP_BUFFER_MULTIPLIER);
@@ -122,9 +115,6 @@ void loop() {
 }
 
 void makeDisplay() {
-  //  writeBreathingColor();
-  //  writeStripeColors();
-//  writeBreathingStrip();
   if (hugStrength < 0.1) setUpBreathingColor(hugStrength * 5);
   else writeRainbowToStrips(hugStrength);
 
