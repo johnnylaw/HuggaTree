@@ -125,9 +125,17 @@ void makeDisplay() {
   //  writeBreathingColor();
   //  writeStripeColors();
 //  writeBreathingStrip();
-  if (hugStrength < 0.1) writeBreathingColor();
+  if (hugStrength < 0.1) setUpBreathingColor(hugStrength * 5);
   else writeRainbowToStrips(hugStrength);
+
   writeSignStrip();
+  writeStrips();
+}
+
+void writeStrips() {
+  for (int i = 0; i < NUM_STRIPS; i++) {
+    strips[i]->write(writeBuffers[i], STRIP_LENGTH);
+  }
 }
 
 const int sparkleLength = 3;
@@ -146,7 +154,6 @@ void writeRainbowToStrips(float strength) {
         writeBuffers[i][sparkleBase++] = {sparkleBrightness, sparkleBrightness, sparkleBrightness};
       }
     }
-    strips[i]->write(writeBuffers[i], STRIP_LENGTH);
   }
 }
 
@@ -165,13 +172,12 @@ void writeStripeColors() {
   strip0.write(stripeColorBuffer + stripePointer, 150);
 }
 
-void writeBreathingColor() {
-  bgColor.breathe(50);
+void setUpBreathingColor(float hugStrength) {
+  bgColor.breathe(50 + hugStrength * 20);
   RGB color = bgColor.color();
-  for (int i = 0; i < STRIP_LENGTH; i++) {
-    colorBuffer[i] = color;
+  for (int j = 0; j < STRIP_LENGTH; j++) {
+    for (int i = 0; i < NUM_STRIPS; i++) writeBuffers[i][j] = color;
   }
-  for (int i = 0; i < NUM_STRIPS; i++) strips[i]->write(colorBuffer, STRIP_LENGTH);
 }
 
 void writeBreathingStrip() {
