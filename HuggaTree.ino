@@ -8,7 +8,7 @@
 #include <ARMLightStrip.h>
 #include <BreathingColor.h>
 
-#define STRIP_LENGTH 120
+#define STRIP_LENGTH 116
 #define SIGN_STRIP_LENGTH 19
 #define SIGN_STRIP_BUFFER_MULTIPLIER 40
 #define SIGN_STRIP_HALF_BUFFER_LENGTH (SIGN_STRIP_LENGTH * SIGN_STRIP_BUFFER_MULTIPLIER)
@@ -124,7 +124,7 @@ const int numSetupFunctions = 4;
 static stripSetupFunction stripSetupFunctions[numSetupFunctions] = {
   setUpBreathBubble,
   setUpBreathBubble,
-  setUpBreathBubble,
+  setUpRainbowSpiral,
   setUpRainbowSpiral,
 };
 
@@ -132,30 +132,50 @@ void makeDisplay() {
   determineHugCount();
   if (hugStrength < 0.1) setUpBreathingColor(hugStrength * 5, false);
   else {
-    stripSetupFunctions[getStripSetupFunctionIndex()](hugStrength);
+    stripSetupFunctions[getStripSetupFunctionIndex(hugStrength)](hugStrength);
   }
 
   writeSignStrip();
   writeStrips();
 }
 
+int currentBreathBubbleIndex = 0;
+const int numberBreathBubbleColors = 4;
+int breathBubbleLength = 10;
+static RGB breathBubbleColors[numberBreathBubbleColors] = {
+  {255, 20, 0},
+  {255, 80, 0},
+  {255, 0, 30},
+  {255, 120, 0}
+};
+
+bool functionIndexSwitched = false;
 void determineHugCount() {
-  newHug = false;
+  if (functionIndexSwitched) newHug = false;
   if (hugStrength > hugThresholds[1]) hugMetThreshold = true;
   else if (hugMetThreshold && hugStrength < hugThresholds[0]) {
     hugCount++;
+    hugMetThreshold = false;
     newHug = true;
+    functionIndexSwitched = false;
   }
   if (hugCount >= numHugsRequired) {
     numHugsRequired = random(5);
     hugCount = 0;
   }
+  if (hugStrength < hugThresholds[0]) {
+    currentBreathBubbleIndex = random(numberBreathBubbleColors);
+    breathBubbleLength = random(30) + 5;
+  }
 }
 
 int setUpFunctionPointer = 0;
-int getStripSetupFunctionIndex() {
-  if (hugCount == 0) setUpFunctionPointer = (setUpFunctionPointer + 1) % numSetupFunctions;
-  return numSetupFunctions - 1; // Spiral for testing progress   //setUpFunctionPointer;
+int getStripSetupFunctionIndex(float strength) {
+  if (newHug && hugCount == 0) {
+     setUpFunctionPointer = (setUpFunctionPointer + 1) % numSetupFunctions;
+     functionIndexSwitched = true;
+  }
+  return setUpFunctionPointer;
 }
 
 void writeStrips() {
@@ -164,20 +184,10 @@ void writeStrips() {
   }
 }
 
-RGB currentBreathBubbleColor = RGB(255, 0, 0);
-const int numberBreathBubbleColors = 4;
-const int breathBubbleLength = 10;
-static RGB breathBubbleColors[numberBreathBubbleColors] = {
-  {255, 0, 0},
-  {255, 40, 0},
-  {255, 0, 30},
-  {255, 80, 0}
-};
-
 void setUpBreathBubble(float strength) {
+  RGB currentBreathBubbleColor = breathBubbleColors[currentBreathBubbleIndex] * strength;
   setUpBreathingColor(strength, true); // Write one strip only
-  if (newHug) currentBreathBubbleColor = breathBubbleColors[random(numberBreathBubbleColors)] * strength;
-  int start = max(0, strength * STRIP_LENGTH - breathBubbleLength);
+  int start = min(max(0, strength * 1.2 * STRIP_LENGTH - breathBubbleLength), STRIP_LENGTH - breathBubbleLength);
   int finish = start + breathBubbleLength - 1;
   writeBuffers[0][start] = writeBuffers[0][finish] = writeBuffers[0][start].interpolate(currentBreathBubbleColor, 0.2);
   writeBuffers[0][start + 1] = writeBuffers[0][finish - 1] = writeBuffers[0][start + 1].interpolate(currentBreathBubbleColor, 0.5);
@@ -187,11 +197,12 @@ void setUpBreathBubble(float strength) {
       writeBuffers[i][j] = writeBuffers[0][j];
     }
   }
+  if (strength > 0.7) addSparkles(2, 0);
 }
 
 const int spiralSpeedFactor = 12;
-const int spiralOffsetPerSpoke = 12;
 void setUpRainbowSpiral(float strength) {
+  int spiralOffsetPerSpoke = 20 + strength * 10;
   RGB color;
   float power = pow(strength, 2);
   bufferPosition = (bufferPosition - (int)(spiralSpeedFactor * strength) + STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER) % (STRIP_LENGTH * RAINBOW_STRIP_MULTIPLIER);
@@ -230,7 +241,7 @@ void writeStripeColors() {
 }
 
 void setUpBreathingColor(float hugStrength, bool oneStripOnly) {
-  bgColor.breathe(50 + hugStrength * 70);
+  bgColor.breathe(50 + hugStrength * 150);
   RGB color = bgColor.color();
   for (int j = 0; j < STRIP_LENGTH; j++) {
     int numStrips = oneStripOnly ? 1 : NUM_STRIPS;
